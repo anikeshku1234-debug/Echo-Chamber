@@ -3,7 +3,7 @@
  * Pure Vanilla JavaScript Client Application
  */
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL =  "https://echo-chamber7.onrender.com";
 
 // State variables
 let currentAnalysis = null;
