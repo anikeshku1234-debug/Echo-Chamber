@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Echo Chamber – The Perspective Flipper</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <span class="brand-icon">🔄</span>
+                <span class="brand-title">Echo Chamber</span>
+            </div>
+            <div class="nav-actions">
+                <button id="themeToggle" class="btn-icon" aria-label="Toggle Theme">
+          <span class="theme-icon">☀️</span>
+        </button>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero-section" id="hero">
+        <div class="hero-content">
+            <div class="badge">AI-Powered Cognitive Balance</div>
+            <h1 class="hero-title">Flip the perspective.<br /><span class="gradient-text">See beyond your side.</span></h1>
+            <p class="hero-desc">
+                An AI-powered perspective flipper that analyzes your thoughts, opinions, and arguments from positive, negative, alternative, and cognitive-bias-free viewpoints.
+            </p>
+            <a href="#dashboard" class="btn-primary">Start Analysis →</a>
+        </div>
+    </section>
+
+    <main class="main-container" id="dashboard">
+
+        <section class="card input-card">
+            <h2 class="section-title">What’s your perspective?</h2>
+            <p class="section-subtitle">Enter an opinion, argument, statement, or topic to uncover alternative dimensions.</p>
+
+            <div class="input-wrapper">
+                <textarea id="statementInput" rows="4" placeholder="e.g., I think AI will replace programmers in the future..."></textarea>
+            </div>
+
+            <div class="preset-container">
+                <span class="preset-label">Try an example:</span>
+                <div class="preset-chips">
+                    <button class="chip" data-text="AI will replace programmers">AI will replace programmers</button>
+                    <button class="chip" data-text="Social media is harmful to society">Social media is harmful</button>
+                    <button class="chip" data-text="Work from home is better than office work">Work from home is better</button>
+                    <button class="chip" data-text="A college degree is necessary for success">College degree is necessary</button>
+                    <button class="chip" data-text="Technology makes people less social">Technology makes people less social</button>
+                </div>
+            </div>
+
+            <div class="input-actions">
+                <button id="analyzeBtn" class="btn-action">
+          <span class="btn-text">Analyze Perspective</span>
+        </button>
+            </div>
+
+            <div id="statusToast" class="toast hidden"></div>
+        </section>
+
+        <section id="loadingState" class="card loading-card hidden">
+            <div class="spinner-wrapper">
+                <div class="spinner"></div>
+            </div>
+            <h3 class="loading-title">🤖 AI is analyzing your perspective...</h3>
+            <p id="loadingStatusText" class="loading-status">Checking positive arguments...</p>
+        </section>
+
+        <section id="resultsSection" class="results-wrapper hidden">
+
+            <div class="stats-grid">
+                <div class="stat-card stat-positive">
+                    <div class="stat-header">
+                        <span>🟢 Positive Points</span>
+                    </div>
+                    <div class="stat-value" id="statPosCount">0</div>
+                </div>
+
+                <div class="stat-card stat-negative">
+                    <div class="stat-header">
+                        <span>🔴 Negative Points</span>
+                    </div>
+                    <div class="stat-value" id="statNegCount">0</div>
+                </div>
+
+                <div class="stat-card stat-bias">
+                    <div class="stat-header">
+                        <span>⚠️ Biases Detected</span>
+                    </div>
+                    <div class="stat-value" id="statBiasCount">0</div>
+                </div>
+
+                <div class="stat-card stat-score">
+                    <div class="stat-header">
+                        <span>⚖️ Balance Score</span>
+                    </div>
+                    <div class="stat-value" id="statBalanceScore">0%</div>
+                </div>
+            </div>
+
+            <div class="card perspective-flipper-container">
+                <div class="flipper-header">
+                    <div>
+                        <h3 class="flipper-title">Perspective Flipper</h3>
+                        <p class="flipper-desc">Interact with the card to alternate between your original premise and the counter-perspective.</p>
+                    </div>
+                    <button id="flipBtn" class="btn-flip">
+            <span>🔄 Flip Perspective</span>
+          </button>
+                </div>
+
+                <div class="flip-scene">
+                    <div class="flip-card" id="flipCardElement">
+                        <div class="flip-face flip-front">
+                            <span class="face-tag">Original Premise</span>
+                            <p id="originalStatementDisplay" class="face-text">...</p>
+                            <div class="face-footer">Click "Flip Perspective" to reverse viewpoints</div>
+                        </div>
+                        <div class="flip-face flip-back">
+                            <span class="face-tag">Flipped Alternate Angle</span>
+                            <p id="flippedStatementDisplay" class="face-text">...</p>
+                            <div class="face-footer">Alternative viewpoint generated</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="perspective-grid">
+                <div class="card perspective-card card-positive">
+                    <div class="card-title-group">
+                        <span class="card-icon">🟢</span>
+                        <h3>Positive Perspective</h3>
+                    </div>
+                    <ul id="positiveList" class="points-list"></ul>
+                </div>
+
+                <div class="card perspective-card card-negative">
+                    <div class="card-title-group">
+                        <span class="card-icon">🔴</span>
+                        <h3>Negative Perspective</h3>
+                    </div>
+                    <ul id="negativeList" class="points-list"></ul>
+                </div>
+            </div>
+
+            <div class="analysis-breakdown-grid">
+                <div class="card gauge-card">
+                    <h3>Perspective Balance Score</h3>
+                    <div class="gauge-wrapper">
+                        <svg class="progress-ring" width="180" height="180">
+              <circle class="progress-ring__circle-bg" stroke-width="12" fill="transparent" r="74" cx="90" cy="90"/>
+              <circle class="progress-ring__circle" id="balanceRing" stroke-width="12" fill="transparent" r="74" cx="90" cy="90"/>
+            </svg>
+                        <div class="gauge-center-text">
+                            <span id="gaugeValue" class="gauge-number">0</span>
+                            <span class="gauge-total">/ 100</span>
+                        </div>
+                    </div>
+                    <div id="gaugeLabel" class="gauge-badge">Calculating</div>
+                </div>
+
+                <div class="card biases-card">
+                    <div class="card-title-group">
+                        <span class="card-icon">⚠️</span>
+                        <h3>Cognitive Bias Detector</h3>
+                    </div>
+                    <div id="biasesContainer" class="biases-list"></div>
+                </div>
+            </div>
+
+            <div class="card conclusion-card">
+                <div class="card-title-group">
+                    <span class="card-icon">⚖️</span>
+                    <h3>Balanced AI View</h3>
+                </div>
+                <p id="balancedConclusionText" class="conclusion-text">...</p>
+            </div>
+
+        </section>
+
+        <section class="card history-card">
+            <div class="history-header">
+                <h3>Analysis History</h3>
+                <button id="clearHistoryBtn" class="btn-link">Clear History</button>
+            </div>
+            <div id="historyList" class="history-list">
+                <p class="empty-state">No previous analyses recorded yet.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2026 Echo Chamber – The Perspective Flipper. Built with Java Spring Boot & Pure Vanilla JS.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
