@@ -96,9 +96,9 @@ async function sendToBackend(statement) {
  */
 function displayAnalysis(analysis) {
     // Update Statistics
-    document.getElementById('statPosCount').innerText = analysis.positivePoints ? .length || 0;
-    document.getElementById('statNegCount').innerText = analysis.negativePoints ? .length || 0;
-    document.getElementById('statBiasCount').innerText = analysis.biases ? .length || 0;
+    document.getElementById('statPosCount').innerText = analysis.positivePoints ?.length || 0;
+    document.getElementById('statNegCount').innerText = analysis.negativePoints ?.length || 0;
+    document.getElementById('statBiasCount').innerText = analysis.biases ?.length || 0;
     document.getElementById('statBalanceScore').innerText = `${analysis.score}%`;
 
     // Render Flipper Cards
