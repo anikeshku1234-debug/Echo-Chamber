@@ -1,0 +1,15 @@
+{
+  "name": "Echo Chamber",
+  "short_name": "EchoChamber",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0f0c20",
+  "theme_color": "#ec4899",
+  "icons": [
+    {
+      "src": "echo_logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
