@@ -17,19 +17,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class AnalysisService {
 
-    @Value("${ai.api.key:DEMO_MOCK_KEY}")
+    @Value("${gemini.api.key:${AI_API_KEY:DEMO_MOCK_KEY}}")
     private String apiKey;
 
-    @Value("${ai.api.url:https://api.openai.com/v1/chat/completions}")
-    private String apiUrl;
-
-    @Value("${ai.api.model:gpt-4o-mini}")
-    private String modelName;
-
-    // Direct initialization to prevent any Spring bean injection error
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
-
     private final Map<String, AnalysisHistoryItem> historyStorage = new ConcurrentHashMap<>();
 
     public AnalysisService() {
@@ -42,8 +34,9 @@ public class AnalysisService {
             response = generateLocalCognitiveAnalysis(statement);
         } else {
             try {
-                response = callRemoteAiApi(statement);
+                response = callGeminiApi(statement);
             } catch (Exception e) {
+                System.err.println("Gemini API call failed: " + e.getMessage());
                 response = generateLocalCognitiveAnalysis(statement);
             }
         }
@@ -63,43 +56,44 @@ public class AnalysisService {
         historyStorage.clear();
     }
 
-    private AnalysisResponse callRemoteAiApi(String statement) throws Exception {
+    private AnalysisResponse callGeminiApi(String statement) throws Exception {
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(apiKey);
 
-        String systemPrompt = """
-            You are an objective AI perspective analyzer.
-            Analyze the user's opinion and output ONLY valid JSON matching this schema:
+        String prompt = """
+            You are an objective perspective analyzer and cognitive bias detector.
+            Analyze the following user statement: "%s"
+            
+            Return ONLY a raw, valid JSON object matching exactly this schema:
             {
-              "score": <integer 0-100>,
-              "positivePoints": ["string", "string"],
-              "negativePoints": ["string", "string"],
-              "alternativePerspective": "string",
+              "score": <integer between 40 and 95>,
+              "positivePoints": ["point 1", "point 2", "point 3"],
+              "negativePoints": ["point 1", "point 2", "point 3"],
+              "alternativePerspective": "A clear, thought-provoking counter viewpoint",
               "biases": [
-                { "name": "string", "explanation": "string", "severity": "High|Medium|Low" }
+                { "name": "Bias Name", "explanation": "Why this statement exhibits it", "severity": "High" }
               ],
-              "balancedConclusion": "string"
+              "balancedConclusion": "A synthesized, neutral summary concluding the argument"
             }
-            Do not include markdown ticks. Output pure JSON.
-            """;
+            Do not enclose in markdown code blocks like ```json. Output raw JSON text only.
+            """.formatted(statement.replace("\"", "\\\""));
 
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("model", modelName);
-        payload.put("messages", List.of(
-            Map.of("role", "system", "content", systemPrompt),
-            Map.of("role", "user", "content", statement)
-        ));
-        payload.put("temperature", 0.3);
+        Map<String, Object> textPart = Map.of("text", prompt);
+        Map<String, Object> contentPart = Map.of("parts", List.of(textPart));
+        Map<String, Object> requestBody = Map.of("contents", List.of(contentPart));
 
-        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(payload, headers);
-        ResponseEntity<String> responseEntity = restTemplate.exchange(apiUrl, HttpMethod.POST, requestEntity, String.class);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
 
-        JsonNode rootNode = objectMapper.readTree(responseEntity.getBody());
-        String content = rootNode.path("choices").get(0).path("message").path("content").asText();
-        content = content.replaceAll("```json", "").replaceAll("```", "").trim();
+        JsonNode root = objectMapper.readTree(response.getBody());
+        String rawText = root.path("candidates").get(0).path("content").path("parts").get(0).path("text").asText();
 
-        return objectMapper.readValue(content, AnalysisResponse.class);
+        // Strip backticks if the model still wrapped JSON
+        String cleanedJson = rawText.replaceAll("(?s)```json\\s*", "").replaceAll("```", "").trim();
+
+        return objectMapper.readValue(cleanedJson, AnalysisResponse.class);
     }
 
     private AnalysisResponse generateLocalCognitiveAnalysis(String statement) {
@@ -143,19 +137,19 @@ public class AnalysisService {
             score = 68;
         } else {
             positive.addAll(List.of(
-                "Provides clear focus and straightforward execution criteria",
-                "Offers potential efficiency and structured optimization",
-                "Fosters innovation when applied within appropriate boundaries"
+                "Highlights specific priorities and execution criteria for: " + statement,
+                "Brings attention to a distinct, actionable viewpoint",
+                "Encourages active discussion on the core subject"
             ));
             negative.addAll(List.of(
-                "Overlooks subtle counter-arguments and specific situational exceptions",
-                "May introduce unforeseen trade-offs and secondary costs",
-                "Lacks universal adaptability across distinct contexts"
+                "Risk of oversimplifying nuanced real-world complexities",
+                "Potential unmeasured trade-offs if adopted unconditionally",
+                "May not apply universally across distinct circumstances"
             ));
-            flipped = "The opposite premise holds equal weight when examined under conditions where contextual trade-offs dominate.";
-            biases.add(new Bias("Confirmation Bias", "You may be focusing more heavily on data points confirming your preliminary intuition.", "Medium"));
-            conclusion = "A balanced viewpoint requires weighing situational context rather than applying absolute conclusions.";
-            score = 72;
+            flipped = "An alternate perspective reveals valid counter-considerations when tested under varied constraints.";
+            biases.add(new Bias("Confirmation Bias", "Leaning heavily into assumptions that validate an initial premise.", "Medium"));
+            conclusion = "A complete assessment requires balancing practical upsides against situational trade-offs.";
+            score = 70;
         }
 
         return new AnalysisResponse(score, positive, negative, flipped, biases, conclusion);
